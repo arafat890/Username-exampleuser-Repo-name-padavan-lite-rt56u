@@ -1,0 +1,32 @@
+
+name: Build Padavan Firmware
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    - name: Set up build environment
+      run: |
+        sudo apt update
+        sudo apt install -y git make gcc g++ unzip libncurses5-dev libssl-dev gettext zlib1g-dev file
+
+    - name: Clone Padavan toolchain and source
+      run: |
+        git clone --depth=1 https://github.com/hanwckf/rt-n56u.git padavan
+        cd padavan/toolchain-mipsel
+        ./dl_toolchain.sh
+        cd ..
+        cp ../build.config .config
+        fakeroot make image
+
+    - name: Upload firmware
+      uses: actions/upload-artifact@v3
+      with:
+        name: firmware
+        path: padavan/images/*.trx
